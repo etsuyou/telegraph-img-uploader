@@ -2,20 +2,20 @@ const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
+const IMGS_CONFIG = require("./config");
 
 // 配置项
 const CONFIG = {
-  PAGE_URL: `test-Cafe-de-Etoile`,
-  IMAGE_DIR: "./imgs",
+  PAGE_URL: IMGS_CONFIG.PAGE_URL,
+  TELEGRAPH_TITLE: IMGS_CONFIG.TELEGRAPH_TITLE,
+  IMAGE_DIR: IMGS_CONFIG.IMAGE_DIR,
   BASE_URL: "https://im.gurl.eu.org",
-  RESULT_JSON: "./output/upload-results.json",
   ALLOWED_EXT: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
   CONCURRENCY: 10,
   MD_AUTHOR: "Kafu Chino",
   TELEGRAPH_SHORT_NAME: "BocchiUploader",
   TELEGRAPH_AUTHOR: "Kafu Chino",
   AUTHOR_URL: "https://github.com/etsuyou/telegraph-img-uploader",
-  TELEGRAPH_TITLE: `请问您今天要来点兔子吗？Cafe de Etoile`,
   RETRY_TIMES: 10,
   RETRY_DELAY: 10000,
   LOG_DIR: "./output/logs", // 新增日志目录配置
@@ -23,13 +23,14 @@ const CONFIG = {
 
 // 动态生成的markdown文件路径
 CONFIG.RESULT_MD = `./output/${CONFIG.PAGE_URL}.md`;
+CONFIG.RESULT_JSON = `./output/${CONFIG.PAGE_URL}.json`;
 
 // 日志函数
 function writeLog(level, message) {
   try {
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] [${level}] ${message}\n`;
-    
+
     // 控制台输出
     if (level === "ERROR") {
       console.error(logMessage);
@@ -44,7 +45,10 @@ function writeLog(level, message) {
 
     // 写入日志文件（按日期分割）
     const logDate = timestamp.split("T")[0];
-    const logPath = path.join(CONFIG.LOG_DIR, `${logDate}-${CONFIG.PAGE_URL}.log`);
+    const logPath = path.join(
+      CONFIG.LOG_DIR,
+      `${logDate}-${CONFIG.PAGE_URL}.log`
+    );
     fs.appendFileSync(logPath, logMessage, { flag: "a" });
   } catch (error) {
     console.error(`无法写入日志文件: ${error.message}`);
@@ -136,12 +140,13 @@ async function concurrentUpload(files) {
 }
 
 // 生成 Markdown
-function generateMarkdown(items, accessToken) {
+function generateMarkdown(items, accessToken, url) {
   const currentYear = new Date().getFullYear();
   return [
     `# ${CONFIG.TELEGRAPH_TITLE}\n`,
     `**上传者**: ${CONFIG.MD_AUTHOR}`,
     `**accessToken**: ${accessToken}`,
+    `**url**: ${url}`,
     `**图片数量**: ${items.length}\n\n`,
     ...items.map((item) => `![${item.filename}](${item.url})`),
     "\n\n> 本文件由自动上传脚本生成",
@@ -247,21 +252,30 @@ async function main() {
       }
     });
 
-    // 上传图片
-    const imageFiles = getImageFiles();
-    const results = await concurrentUpload(imageFiles);
+    let results = null;
+    let imageFiles = null;
+    if (!(await fs.existsSync(CONFIG.RESULT_JSON))) {
+      // 上传图片
+      imageFiles = getImageFiles();
+      results = await concurrentUpload(imageFiles);
+
+      // 保存结果
+      fs.writeFileSync(CONFIG.RESULT_JSON, JSON.stringify(results, null, 2));
+    } else {
+      // 如果文件存在，读取结果
+      results = JSON.parse(fs.readFileSync(CONFIG.RESULT_JSON, "utf-8"));
+    }
+
+    // 确保 results 不为 null
+    if (results === null) {
+      results = []; // 或者你可以选择抛出一个错误
+    }
+
     const successResults = results.filter((item) => item.status === "success");
 
     if (successResults.length > 0) {
       const accessToken = await createTelegraphAccount();
       writeLog("INFO", `获取 accessToken: ${accessToken}`);
-
-      // 保存结果
-      fs.writeFileSync(CONFIG.RESULT_JSON, JSON.stringify(results, null, 2));
-      fs.writeFileSync(
-        CONFIG.RESULT_MD,
-        generateMarkdown(successResults, accessToken)
-      );
 
       // 创建 Telegraph 页面
       const pageUrl = await createTelegraphPage(accessToken, successResults);
@@ -282,6 +296,12 @@ async function main() {
         }))
       );
       writeLog("INFO", `最终页面地址：${updatedPageUrl}`);
+
+      // 生成markdown
+      fs.writeFileSync(
+        CONFIG.RESULT_MD,
+        generateMarkdown(successResults, accessToken, updatedPageUrl)
+      );
     }
 
     writeLog(
