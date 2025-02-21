@@ -9,7 +9,8 @@ const CONFIG = {
   PAGE_URL: IMGS_CONFIG.PAGE_URL,
   TELEGRAPH_TITLE: IMGS_CONFIG.TELEGRAPH_TITLE,
   IMAGE_DIR: IMGS_CONFIG.IMAGE_DIR,
-  BASE_URL: "https://im.gurl.eu.org",
+  // 更换成channel存储
+  BASE_URL: "https://tgdrive-latest-due4.onrender.com/",
   ALLOWED_EXT: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
   CONCURRENCY: 10,
   MD_AUTHOR: "Kafu Chino",
@@ -95,13 +96,17 @@ async function uploadFile(file, index, total) {
       const filePath = path.join(CONFIG.IMAGE_DIR, file);
       formData.append("file", fs.createReadStream(filePath));
 
-      const response = await axios.post(`${CONFIG.BASE_URL}/upload`, formData, {
+      const response = await axios.post(`${CONFIG.BASE_URL}api/upload`, formData, {
         headers: formData.getHeaders(),
       });
 
+      console.log(response.data.data)
+
       return {
+        // 文件名用本地的
         filename: file,
-        url: `${CONFIG.BASE_URL}${response.data[0].src}`,
+        // url: `${CONFIG.BASE_URL}${response.data[0].src}`,
+        url: `${response.data.data.downloadLink}`,
         status: "success",
         retries: retryCount,
       };

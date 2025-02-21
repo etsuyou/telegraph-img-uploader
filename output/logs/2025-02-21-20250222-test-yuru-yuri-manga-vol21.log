@@ -1,0 +1,17 @@
+[2025-02-21T16:45:48.757Z] [INFO] 程序启动
+[2025-02-21T16:45:48.760Z] [INFO] 发现 4 张图片，开始上传...
+[2025-02-21T16:45:48.761Z] [INFO] [1/4] 正在上传 001.jpg
+[2025-02-21T16:45:52.093Z] [INFO] [2/4] 正在上传 002.jpg
+[2025-02-21T16:45:53.215Z] [INFO] [3/4] 正在上传 003.jpg
+[2025-02-21T16:45:55.413Z] [INFO] [4/4] 正在上传 004.jpg
+[2025-02-21T16:45:57.983Z] [INFO] Telegraph 账户创建成功
+[2025-02-21T16:45:57.983Z] [INFO] 获取 accessToken: 6e1358516660dfb00142627972781eb07f01ac1a0bc5113bb972dd97205e
+[2025-02-21T16:45:58.461Z] [INFO] Telegraph 页面创建成功
+[2025-02-21T16:45:59.213Z] [INFO] 页面标题修改成功
+[2025-02-21T16:45:59.213Z] [INFO] 最终页面地址：https://telegra.ph/20250222-test-yuru-yuri-manga-vol21-2025-02-21
+[2025-02-21T16:45:59.227Z] [INFO] 
+上传完成！
+成功上传 4/4 张图片
+[2025-02-21T16:45:59.227Z] [INFO] JSON 结果：c:\Users\etsuyou\Desktop\telegraph-img-uploader\output\20250222-test-yuru-yuri-manga-vol21.json
+[2025-02-21T16:45:59.228Z] [INFO] Markdown 文件：c:\Users\etsuyou\Desktop\telegraph-img-uploader\output\20250222-test-yuru-yuri-manga-vol21.md
+[2025-02-21T16:45:59.228Z] [INFO] 程序正常退出
